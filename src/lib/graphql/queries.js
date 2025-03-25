@@ -23,6 +23,14 @@ const customLink = new ApolloLink((operation, forward) => {
 const appoloClient = new ApolloClient({
   link: concat(customLink, httpLink),
   cache: new InMemoryCache(),
+  // defaultOptions: {
+  //   query: {
+  //     fetchPolicy: "network-only",
+  //   },
+  //   watchQuery: {
+  //     fetchPolicy: "network-only",
+  //   },
+  // },
 });
 export async function getJobs() {
   const query = gql`
@@ -41,7 +49,7 @@ export async function getJobs() {
 
   const { data } = await appoloClient.query({
     query,
-    fetchPolicy: "cache-first", // cache-first, network-only
+    fetchPolicy: "cache-first", // policies: cache-first, network-only, cache-only, cache-and-network
   });
   return data.jobs;
 }
