@@ -1,4 +1,3 @@
-import { GraphQLClient } from "graphql-request";
 import { getAccessToken } from "../auth";
 import {
   ApolloClient,
@@ -42,6 +41,7 @@ export async function getJobs() {
 
   const { data } = await appoloClient.query({
     query,
+    fetchPolicy: "cache-first", // cache-first, network-only
   });
   return data.jobs;
 }
