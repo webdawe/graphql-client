@@ -1,16 +1,30 @@
-import { GraphQLClient, gql } from "graphql-request";
+import { GraphQLClient } from "graphql-request";
 import { getAccessToken } from "../auth";
+import {
+  ApolloClient,
+  ApolloLink,
+  InMemoryCache,
+  concat,
+  createHttpLink,
+  gql,
+} from "@apollo/client";
 
-const client = new GraphQLClient("http://localhost:9000/graphql", {
-  headers: () => {
-    const accessToken = getAccessToken();
-    if (accessToken) {
-      return { Authorization: `Bearer ${accessToken}` };
-    }
-    return {};
-  },
+const httpLink = createHttpLink({ uri: "http://localhost:9000/graphql" });
+const customLink = new ApolloLink((operation, forward) => {
+  const accessToken = getAccessToken();
+  if (accessToken) {
+    operation.setContext({
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+  }
+  //console.log("[customLink] operation:", operation);
+  return forward(operation);
 });
 
+const appoloClient = new ApolloClient({
+  link: concat(customLink, httpLink),
+  cache: new InMemoryCache(),
+});
 export async function getJobs() {
   const query = gql`
     query {
@@ -25,8 +39,10 @@ export async function getJobs() {
       }
     }
   `;
-  const data = await client.request(query);
 
+  const { data } = await appoloClient.query({
+    query,
+  });
   return data.jobs;
 }
 
@@ -45,8 +61,10 @@ export async function getJob(id) {
       }
     }
   `;
-  const data = await client.request(query, { id });
-
+  const { data } = await appoloClient.query({
+    query,
+    variables: { id },
+  });
   return data.job;
 }
 
@@ -65,7 +83,10 @@ export async function getCompany(id) {
       }
     }
   `;
-  const data = await client.request(query, { id });
+  const { data } = await appoloClient.query({
+    query,
+    variables: { id },
+  });
 
   return data.company;
 }
@@ -78,9 +99,13 @@ export async function createJob({ title, description }) {
       }
     }
   `;
-  const { job } = await client.request(mutation, {
-    input: { title, description },
+
+  const { data } = await appoloClient.mutate({
+    mutation,
+    variables: {
+      input: { title, description },
+    },
   });
 
-  return job;
+  return data.job;
 }
