@@ -16,7 +16,7 @@ const customLink = new ApolloLink((operation, forward) => {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
   }
-  //console.log("[customLink] operation:", operation);
+
   return forward(operation);
 });
 
@@ -53,24 +53,29 @@ export async function getJobs() {
   });
   return data.jobs;
 }
-
-export async function getJob(id) {
-  const query = gql`
-    query jobById($id: ID!) {
-      job(id: $id) {
-        id
-        title
-        date
-        description
-        company {
-          id
-          name
-        }
-      }
+const jobDetailFragment = gql`
+  fragment JobDetail on Job {
+    id
+    date
+    title
+    company {
+      id
+      name
     }
-  `;
+    description
+  }
+`;
+const jobByIdQuery = gql`
+  query jobById($id: ID!) {
+    job(id: $id) {
+      ...JobDetail
+    }
+  }
+  ${jobDetailFragment}
+`;
+export async function getJob(id) {
   const { data } = await appoloClient.query({
-    query,
+    query: jobByIdQuery,
     variables: { id },
   });
   return data.job;
@@ -104,6 +109,13 @@ export async function createJob({ title, description }) {
     mutation ($input: CreateJobInput!) {
       job: createJob(input: $input) {
         id
+        title
+        date
+        description
+        company {
+          id
+          name
+        }
       }
     }
   `;
@@ -112,6 +124,14 @@ export async function createJob({ title, description }) {
     mutation,
     variables: {
       input: { title, description },
+    },
+    update: (cache, { data }) => {
+      console.log("Inside Cache", data);
+      cache.writeQuery({
+        query: jobByIdQuery,
+        variables: { id: data.job.id },
+        data,
+      });
     },
   });
 
