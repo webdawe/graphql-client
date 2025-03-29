@@ -103,24 +103,23 @@ export async function getCompany(id) {
   return data.company;
 }
 
-export async function createJob({ title, description }) {
-  const mutation = gql`
-    mutation ($input: CreateJobInput!) {
-      job: createJob(input: $input) {
+export const createJobMutation = gql`
+  mutation ($input: CreateJobInput!) {
+    job: createJob(input: $input) {
+      id
+      title
+      date
+      description
+      company {
         id
-        title
-        date
-        description
-        company {
-          id
-          name
-        }
+        name
       }
     }
-  `;
-
+  }
+`;
+export async function createJob({ title, description }) {
   const { data } = await appoloClient.mutate({
-    mutation,
+    mutation: createJobMutation,
     variables: {
       input: { title, description },
     },
