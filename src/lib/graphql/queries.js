@@ -46,13 +46,7 @@ export const jobsQuery = gql`
     }
   }
 `;
-export async function getJobs() {
-  const { data } = await appoloClient.query({
-    query: jobsQuery,
-    fetchPolicy: "cache-first", // policies: cache-first, network-only, cache-only, cache-and-network
-  });
-  return data.jobs;
-}
+
 const jobDetailFragment = gql`
   fragment JobDetail on Job {
     id
@@ -73,13 +67,7 @@ export const jobByIdQuery = gql`
   }
   ${jobDetailFragment}
 `;
-export async function getJob(id) {
-  const { data } = await appoloClient.query({
-    query: jobByIdQuery,
-    variables: { id },
-  });
-  return data.job;
-}
+
 export const companyByIdQuery = gql`
   query companyById($id: ID!) {
     company(id: $id) {
@@ -94,14 +82,6 @@ export const companyByIdQuery = gql`
     }
   }
 `;
-export async function getCompany(id) {
-  const { data } = await appoloClient.query({
-    query: companyByIdQuery,
-    variables: { id },
-  });
-
-  return data.company;
-}
 
 export const createJobMutation = gql`
   mutation ($input: CreateJobInput!) {
@@ -117,21 +97,3 @@ export const createJobMutation = gql`
     }
   }
 `;
-export async function createJob({ title, description }) {
-  const { data } = await appoloClient.mutate({
-    mutation: createJobMutation,
-    variables: {
-      input: { title, description },
-    },
-    update: (cache, { data }) => {
-      console.log("Inside Cache", data);
-      cache.writeQuery({
-        query: jobByIdQuery,
-        variables: { id: data.job.id },
-        data,
-      });
-    },
-  });
-
-  return data.job;
-}
