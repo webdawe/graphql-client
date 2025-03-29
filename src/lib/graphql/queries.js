@@ -20,7 +20,7 @@ const customLink = new ApolloLink((operation, forward) => {
   return forward(operation);
 });
 
-const appoloClient = new ApolloClient({
+export const appoloClient = new ApolloClient({
   link: concat(customLink, httpLink),
   cache: new InMemoryCache(),
   // defaultOptions: {
@@ -80,24 +80,23 @@ export async function getJob(id) {
   });
   return data.job;
 }
-
-export async function getCompany(id) {
-  const query = gql`
-    query companyById($id: ID!) {
-      company(id: $id) {
+export const companyByIdQuery = gql`
+  query companyById($id: ID!) {
+    company(id: $id) {
+      id
+      name
+      description
+      jobs {
         id
-        name
-        description
-        jobs {
-          id
-          title
-          date
-        }
+        title
+        date
       }
     }
-  `;
+  }
+`;
+export async function getCompany(id) {
   const { data } = await appoloClient.query({
-    query,
+    query: companyByIdQuery,
     variables: { id },
   });
 
