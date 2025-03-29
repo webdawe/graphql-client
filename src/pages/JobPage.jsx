@@ -3,18 +3,17 @@ import { Link } from "react-router-dom";
 import { formatDate } from "../lib/formatters";
 import { getJob } from "../lib/graphql/queries";
 import { useEffect, useState } from "react";
+import { useJob } from "../lib/graphql/hooks";
 
 function JobPage() {
   const { jobId } = useParams();
-  const [job, setJob] = useState(null);
-  useEffect(() => {
-    async function fetchJob() {
-      const job = await getJob(jobId);
-      setJob(job);
-    }
-    fetchJob();
-  }, [jobId]);
-
+  const { job, loading, error } = useJob(jobId);
+  if (loading) {
+    return <div className="loading">loading...</div>;
+  }
+  if (error) {
+    return <div className="has-text-danger">Job Not Found</div>;
+  }
   return (
     <>
       {job && (

@@ -32,23 +32,23 @@ export const appoloClient = new ApolloClient({
   //   },
   // },
 });
-export async function getJobs() {
-  const query = gql`
-    query {
-      jobs {
+
+export const jobsQuery = gql`
+  query {
+    jobs {
+      id
+      date
+      title
+      company {
         id
-        date
-        title
-        company {
-          id
-          name
-        }
+        name
       }
     }
-  `;
-
+  }
+`;
+export async function getJobs() {
   const { data } = await appoloClient.query({
-    query,
+    query: jobsQuery,
     fetchPolicy: "cache-first", // policies: cache-first, network-only, cache-only, cache-and-network
   });
   return data.jobs;
@@ -65,7 +65,7 @@ const jobDetailFragment = gql`
     description
   }
 `;
-const jobByIdQuery = gql`
+export const jobByIdQuery = gql`
   query jobById($id: ID!) {
     job(id: $id) {
       ...JobDetail
